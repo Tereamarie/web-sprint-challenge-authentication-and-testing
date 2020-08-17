@@ -4,24 +4,22 @@
 */
 
 const jwt = require('jsonwebtoken');
-const secrets = require('../config/secrets.js');
+const { jwtSecret } = require('../secrets/authSecret');
 
 module.exports = (req, res, next) => {
+    const { authorization } = req.headers;
 
-  const token= req.headers.authorization;
-  
-  if (token) {
-    jwt.verify(token, secrets.jwtSecret, (error, decodedToken) => {
-      if (error) {
-        res.status(401).json({message: "whoops, sorry friend"});
-      } else {
-        req.decodedJwt = decodedToken;
-        console.log(req.decodedJwt);
-        next();
-      }
-    })
-  } else {
-    res.status(401).json({ you: 'shall not pass!' });
-  }
-  
+    if (authorization) {
+        jwt.verify(authorization, jwtSecret, (err, decodedToken) => {
+            if (err) {
+                res.status(401).json({ message: "Your credentials are wrong" });
+            } else {
+                req.decodedToken = decodedToken;
+                next();
+            }
+        });
+    } else {
+        res.status(400).json({ message: "No credentials provided" });
+    }
+
 };
